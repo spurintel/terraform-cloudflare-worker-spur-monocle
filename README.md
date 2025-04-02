@@ -1,6 +1,6 @@
 # Terraform Module for Spur Monocle Cloudflare Worker
 
-This is a Terraform module that will deploy Spur's [Monocle passive VPN and Proxy-blocking captcha](https://spur.us/monocle/) to a Cloudflare Worker.
+Terraform module that will deploy Spur's [Monocle passive VPN and Proxy-blocking captcha](https://spur.us/monocle/) to a Cloudflare Worker.
 
 You can learn more about Monocle in our [official docs](https://docs.spur.us/monocle).
 
