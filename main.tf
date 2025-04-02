@@ -37,8 +37,7 @@ resource "cloudflare_workers_script" "monocle" {
   account_id = var.cloudflare_account_id
   name       = var.worker_name
   content    = local.final_worker_js
-  #content = file("${path.module}/worker.js")
-  module = true
+  module     = true
 
 
   kv_namespace_binding {
