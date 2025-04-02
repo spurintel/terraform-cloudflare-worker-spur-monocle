@@ -1,0 +1,175 @@
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+
+// node_modules/itty-router/dist/itty-router.min.mjs
+function e({ base: t = "", routes: n = [] } = {}) {
+  return { __proto__: new Proxy({}, { get: /* @__PURE__ */ __name((e2, a, o) => (e3, ...r) => n.push([a.toUpperCase(), RegExp(`^${(t + e3).replace(/(\/?)\*/g, "($1.*)?").replace(/(\/$)|((?<=\/)\/)/, "").replace(/:(\w+)(\?)?(\.)?/g, "$2(?<$1>[^/]+)$2$3").replace(/\.(?=[\w(])/, "\\.").replace(/\)\.\?\(([^\[]+)\[\^/g, "?)\\.?($1(?<=\\.)[^\\.")}/*$`), r]) && o, "get") }), routes: n, async handle(e2, ...r) {
+    let a, o, t2 = new URL(e2.url);
+    e2.query = Object.fromEntries(t2.searchParams);
+    for (var [p, s, u] of n) if ((p === e2.method || "ALL" === p) && (o = t2.pathname.match(s))) {
+      e2.params = o.groups;
+      for (var c of u) if (void 0 !== (a = await c(e2.proxy || e2, ...r))) return a;
+    }
+  } };
+}
+__name(e, "e");
+
+// core.js
+var EXEMPTED_SERVICES = <EXEMPTED_SERVICES_PLACEHOLDER>;
+function parseCookies(header) {
+  let list = {};
+  if (!header) return list;
+  header.split(";").forEach((cookie) => {
+    let [name, ...rest] = cookie.split("=");
+    name = name?.trim();
+    if (name) {
+      list[name] = rest.join("=").trim();
+    }
+  });
+  return list;
+}
+__name(parseCookies, "parseCookies");
+async function primaryHandler(request, env) {
+  const url = new URL(request.url);
+  const cookies = parseCookies(request.headers.get("Cookie"));
+  if (cookies.MCLVALID && await validateCookie(request, env)) {
+    return fetch(request);
+  } else {
+    const captcha = await env.monocle_worker_kv.get("CAPTCHA_CONTENT");
+    console.log("here");
+    console.log(typeof captcha);
+    console.log(captcha);
+    return new Response(captcha.replace("PUBLISHABLE_KEY", env.PUBLISHABLE_KEY).replace("REPLACE_REDIRECT", url.pathname), {
+      headers: {
+        "Content-Type": "text/html"
+      }
+    });
+  }
+}
+__name(primaryHandler, "primaryHandler");
+async function setSecureCookie(request, env) {
+  const clientIpAddress = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Real-IP");
+  if (!clientIpAddress) {
+    console.log("ERROR: No client IP found in headers.");
+    console.log(JSON.stringify([...request.headers]));
+  }
+  const expiryTime = Math.floor(Date.now() / 1e3) + 3600;
+  const cookieValue = `${clientIpAddress}|${expiryTime}`;
+  const secretKey = await crypto.subtle.importKey(
+    "raw",
+    hexToBuf(env.COOKIE_SECRET_VALUE),
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encryptedValue = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    secretKey,
+    new TextEncoder().encode(cookieValue)
+  );
+  const encryptedValueHex = bufToHex(new Uint8Array(encryptedValue));
+  const ivHex = bufToHex(iv);
+  const headers = new Headers();
+  headers.append("Set-Cookie", `MCLVALID=${ivHex}.${encryptedValueHex}; Secure; HttpOnly; Path=/; SameSite=Lax`);
+  return headers;
+}
+__name(setSecureCookie, "setSecureCookie");
+async function validateCookie(request, env) {
+  const clientIp = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Real-IP");
+  if (!clientIp) {
+    console.log("ERROR: No client IP found in headers.");
+    console.log(JSON.stringify([...request.headers]));
+  }
+  const cookieHeader = request.headers.get("Cookie");
+  if (!cookieHeader) {
+    return false;
+  }
+  const cookies = cookieHeader.split(";").map((c) => c.trim());
+  const mclValidCookie = cookies.find((c) => c.startsWith("MCLVALID="));
+  if (!mclValidCookie) {
+    return false;
+  }
+  const cookieValue = mclValidCookie.split("=")[1];
+  const [ivHex, encryptedValueHex] = cookieValue.split(".");
+  if (!ivHex || !encryptedValueHex) {
+    return false;
+  }
+  const secretKey = await crypto.subtle.importKey(
+    "raw",
+    hexToBuf(env.COOKIE_SECRET_VALUE),
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+  const decryptedValue = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: hexToBuf(ivHex) },
+    secretKey,
+    hexToBuf(encryptedValueHex)
+  );
+  const [clientIpAddress, expiryTime] = new TextDecoder().decode(decryptedValue).split("|");
+  if (clientIp !== clientIpAddress) {
+    console.log(`Mismatch IP address. Expecting ${clientIpAddress}, Got ${clientIp}`);
+    return false;
+  }
+  if (Math.floor(Date.now() / 1e3) >= parseInt(expiryTime, 10)) {
+    console.log(`Cookie has expired.`);
+    return false;
+  }
+  return true;
+}
+__name(validateCookie, "validateCookie");
+function bufToHex(buffer) {
+  return Array.prototype.map.call(buffer, (x) => x.toString(16).padStart(2, "0")).join("");
+}
+__name(bufToHex, "bufToHex");
+function hexToBuf(hex) {
+  return new Uint8Array(hex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
+}
+__name(hexToBuf, "hexToBuf");
+
+// index-spur-managed.js
+var router = e();
+router.post("/validate_captcha", async (request, env) => {
+  const thirdPartyApiUrl = "https://decrypt.mcl.spur.us/api/v1/assessment";
+  try {
+    const requestData = await request.json();
+    const captchaData = requestData.captchaData;
+    const apiResponse = await fetch(thirdPartyApiUrl, {
+      method: "POST",
+      body: captchaData,
+      headers: {
+        "Content-Type": "text/plain",
+        // Token should be securely stored and retrieved; adjust as needed
+        "Token": env.SECRET_KEY
+      }
+    });
+    if (!apiResponse.ok) {
+      console.log(apiResponse.status);
+      if (apiResponse.status === 401 || apiResponse.status === 403) {
+        return new Response(`Spur SECRET_KEY is incorrect for this deployment`, { status: 400 });
+      }
+      throw new Error(`API call failed: ${apiResponse.statusText}`);
+    }
+    const data = await apiResponse.json();
+    const responseTime = new Date(data.ts);
+    const currentTime = /* @__PURE__ */ new Date();
+    const timeDifference = Math.abs(currentTime - responseTime) / 1e3;
+    if ((timeDifference > 5 || data.anon) && !EXEMPTED_SERVICES.includes(data.service)) {
+      return new Response(data.service, { status: 403 });
+    }
+    let headers = await setSecureCookie(request, env);
+    return new Response("Captcha validated successfully", { status: 200, headers });
+  } catch (error) {
+    console.error(`Error verifying bundle with https://decrypt.mcl.spur.us/api/v1/assessment: ${error.message}`);
+    return new Response(`Error verifying bundle with https://decrypt.mcl.spur.us/api/v1/assessment: ${error.message}`, { status: 400 });
+  }
+});
+router.all("*", primaryHandler);
+var index_spur_managed_default = {
+  fetch: router.handle
+};
+export {
+  index_spur_managed_default as default
+};
+//# sourceMappingURL=index-spur-managed.js.map
