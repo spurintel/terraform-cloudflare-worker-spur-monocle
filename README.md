@@ -86,3 +86,54 @@ module "monocle_worker" {
   ]
 }
 ```
+
+## Terraform Docs
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_cloudflare"></a> [cloudflare](#requirement\_cloudflare) | ~> 4 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_cloudflare"></a> [cloudflare](#provider\_cloudflare) | ~> 4 |
+| <a name="provider_random"></a> [random](#provider\_random) | n/a |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [cloudflare_worker_route.routes](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/worker_route) | resource |
+| [cloudflare_worker_secret.monocle_cookie_secret](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/worker_secret) | resource |
+| [cloudflare_worker_secret.monocle_publishable_key](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/worker_secret) | resource |
+| [cloudflare_worker_secret.monocle_secret_key](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/worker_secret) | resource |
+| [cloudflare_workers_kv.captcha_page](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/workers_kv) | resource |
+| [cloudflare_workers_kv_namespace.monocle](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/workers_kv_namespace) | resource |
+| [cloudflare_workers_script.monocle](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/workers_script) | resource |
+| [random_string.cookie_secret_hex](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_cloudflare_account_id"></a> [cloudflare\_account\_id](#input\_cloudflare\_account\_id) | Cloudflare account ID | `string` | n/a | yes |
+| <a name="input_exempted_services"></a> [exempted\_services](#input\_exempted\_services) | Spur Service tags to exempt from blocking, e.g.: ['WARP\_VPN', 'ICLOUD\_RELAY\_PROXY'] | `list(string)` | `[]` | no |
+| <a name="input_monocle_cookie_secret"></a> [monocle\_cookie\_secret](#input\_monocle\_cookie\_secret) | Optional override for the Cookie Secret. If empty, it defaults to a random hex string | `string` | `null` | no |
+| <a name="input_monocle_publishable_key"></a> [monocle\_publishable\_key](#input\_monocle\_publishable\_key) | Monocle Publishable key | `string` | n/a | yes |
+| <a name="input_monocle_secret_key"></a> [monocle\_secret\_key](#input\_monocle\_secret\_key) | Monocle Secret key | `string` | n/a | yes |
+| <a name="input_routes"></a> [routes](#input\_routes) | List of routes on which to enable Monocle. Each item's properties are `pattern` and `zone_id`. Patterns must include your domain, e.g.: `example.com/*`. See https://developers.cloudflare.com/workers/configuration/routing/routes/#matching-behavior for more information | <pre>list(object({<br/>    pattern = string<br/>    zone_id = string<br/>  }))</pre> | n/a | yes |
+| <a name="input_worker_name"></a> [worker\_name](#input\_worker\_name) | Name for the Cloudflare Worker. Defaults to `spur-monocle` | `string` | `"spur-monocle"` | no |
+
+## Outputs
+
+No outputs.
+<!-- END_TF_DOCS -->
