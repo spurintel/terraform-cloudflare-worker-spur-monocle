@@ -60,7 +60,7 @@ provider "cloudflare" {
 }
 
 module "monocle_worker" {
-  source = "git::git@github.com:spurintel/terraform-cloudflare-worker-spur-monocle"
+  source = "spurintel/worker-spur-monocle/cloudflare"
 
   cloudflare_account_id   = "<your Cloudflare Account ID>"
   monocle_secret_key      = "<your Monocle Secret key>"
