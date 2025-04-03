@@ -33,5 +33,5 @@ variable "monocle_publishable_key" {
 variable "exempted_services" {
   type        = list(string)
   default     = []
-  description = "Spur Service tags to exempt from blocking, e.g.: ['WARP_VPN', 'ICLOUD_RELAY_PROXY']"
+  description = "Spur Service tags to exempt from blocking, e.g.: `['WARP_VPN', 'ICLOUD_RELAY_PROXY']`"
 }

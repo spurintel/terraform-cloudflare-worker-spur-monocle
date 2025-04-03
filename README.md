@@ -1,6 +1,6 @@
 # Terraform Module for Spur Monocle Cloudflare Worker
 
-Terraform module that will deploy Spur's [Monocle passive VPN and Proxy-blocking captcha](https://spur.us/monocle/) to a Cloudflare Worker.
+Terraform module that will deploy Spur's [Monocle VPN and Proxy-blocking passive captcha](https://spur.us/monocle/) to a Cloudflare Worker.
 
 You can learn more about Monocle in our [official docs](https://docs.spur.us/monocle).
 
@@ -16,7 +16,7 @@ Select the `Edit Cloudflare Workers` permissions template. You'll also have to s
 
 ### Cloudflare Account ID
 
-You'll need your Cloudflare account ID. This is the the alphanumeric string in URL when you are signed in to the Cloudflare dashboard, or you can find it in the `Account ID` widget on the right side of any of your zone (domain) pages.
+You'll need your Cloudflare account ID. This is the the alphanumeric string in the URL when you are signed in to the Cloudflare dashboard, or you can find it in the `Account ID` widget on the right side of any of your zone (domain) pages.
 
 ### Cloudflare Zone ID(s)
 
@@ -40,7 +40,7 @@ Below is a full example of usage of this Terraform module for the site `mcl-test
 
 ```terraform
 # Due to a number of bugs in the 5th version of the Cloudflare official provider, you must use the 4th version for now.
-# When these bugs are fixed, we will update this repo to use the latest version of the provider.
+# When these bugs are fixed, we will update this module to use the latest version of the provider.
 terraform {
   required_providers {
     cloudflare = {
@@ -87,8 +87,6 @@ module "monocle_worker" {
 }
 ```
 
-## Terraform Docs
-
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -126,7 +124,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_cloudflare_account_id"></a> [cloudflare\_account\_id](#input\_cloudflare\_account\_id) | Cloudflare account ID | `string` | n/a | yes |
-| <a name="input_exempted_services"></a> [exempted\_services](#input\_exempted\_services) | Spur Service tags to exempt from blocking, e.g.: ['WARP\_VPN', 'ICLOUD\_RELAY\_PROXY'] | `list(string)` | `[]` | no |
+| <a name="input_exempted_services"></a> [exempted\_services](#input\_exempted\_services) | Spur Service tags to exempt from blocking, e.g.: `['WARP_VPN', 'ICLOUD_RELAY_PROXY']` | `list(string)` | `[]` | no |
 | <a name="input_monocle_cookie_secret"></a> [monocle\_cookie\_secret](#input\_monocle\_cookie\_secret) | Optional override for the Cookie Secret. If empty, it defaults to a random hex string | `string` | `null` | no |
 | <a name="input_monocle_publishable_key"></a> [monocle\_publishable\_key](#input\_monocle\_publishable\_key) | Monocle Publishable key | `string` | n/a | yes |
 | <a name="input_monocle_secret_key"></a> [monocle\_secret\_key](#input\_monocle\_secret\_key) | Monocle Secret key | `string` | n/a | yes |

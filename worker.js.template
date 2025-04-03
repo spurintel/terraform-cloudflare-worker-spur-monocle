@@ -36,9 +36,6 @@ async function primaryHandler(request, env) {
     return fetch(request);
   } else {
     const captcha = await env.monocle_worker_kv.get("CAPTCHA_CONTENT");
-    console.log("here");
-    console.log(typeof captcha);
-    console.log(captcha);
     return new Response(captcha.replace("PUBLISHABLE_KEY", env.PUBLISHABLE_KEY).replace("REPLACE_REDIRECT", url.pathname), {
       headers: {
         "Content-Type": "text/html"
@@ -102,12 +99,20 @@ async function validateCookie(request, env) {
     false,
     ["encrypt", "decrypt"]
   );
-  const decryptedValue = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: hexToBuf(ivHex) },
-    secretKey,
-    hexToBuf(encryptedValueHex)
-  );
-  const [clientIpAddress, expiryTime] = new TextDecoder().decode(decryptedValue).split("|");
+  var clientIpAddress, expiryTime;
+	try {
+		const decryptedValue = await crypto.subtle.decrypt(
+			{ name: "AES-GCM", iv: hexToBuf(ivHex) },
+			secretKey,
+			hexToBuf(encryptedValueHex)
+		);
+
+		[clientIpAddress, expiryTime] = new TextDecoder().decode(decryptedValue).split('|');
+	} catch (error) {
+		console.log(`Error with decrypt: ${error}`);
+		return false;
+	}
+
   if (clientIp !== clientIpAddress) {
     console.log(`Mismatch IP address. Expecting ${clientIpAddress}, Got ${clientIp}`);
     return false;
